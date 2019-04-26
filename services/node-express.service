@@ -8,7 +8,7 @@ Type=simple
 Restart=always
 RestartSec=1
 #User=centos
-ExecStart=/usr/bin/node /var/www/react-sandbox/ssr/index.js
+ExecStart=/usr/local/bin/node-express
 
 [Install]
 WantedBy=multi-user.target
