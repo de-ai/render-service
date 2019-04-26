@@ -12,7 +12,7 @@ app.use('/media', express.static(path.resolve(__dirname, 'media')));
 app.disable('x-powered-by');
 
 // start the server
-app.listen(process.env.PORT || 3001);
+app.listen(process.env.PORT || 1066);
 
 // our apps data model
 const data = require('./assets/data.json');
