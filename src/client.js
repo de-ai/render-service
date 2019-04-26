@@ -1,8 +1,8 @@
-import React from 'react'
-import {hydrate} from 'react-dom'
-import {Provider} from 'react-redux'
-import configureStore from './redux/configureStore'
-import App from './components/app'
+import React from 'react';
+import { hydrate } from 'react-dom';
+import { Provider } from 'react-redux';
+import configureStore from './redux/configureStore';
+import App from './components/app';
 
 // Read the state sent with markup
 const state = window.__STATE__;
@@ -11,7 +11,8 @@ const state = window.__STATE__;
 delete window.__STATE__;
 
 // reproduce the store used to render the page on server
-const store = configureStore(state)
+const store = configureStore(state);
+//=- console.log('[::]', 'store.getState()', store.getState());
 
 /**
  * hydrate the page to make sure both server and client
@@ -24,4 +25,4 @@ hydrate(
      <App />
   </Provider>,
   document.querySelector('#app')
-)
+);

@@ -1,15 +1,18 @@
 // html skeleton provider
-function template(title, initialState = {}, content = ""){
+function template(title, initialState={}, content=''){
+//=-   console.log('[::]', 'template.js -/> ()', title, initialState, content);
+
   let scripts = ''; // Dynamically ship scripts based on render type
-  if(content){
+  if (content) {
     scripts = ` <script>
                    window.__STATE__ = ${JSON.stringify(initialState)}
                 </script>
                 <script src="assets/client.js"></script>
-                `
+              `;
   } else {
-    scripts = ` <script src="assets/bundle.js"> </script> `
+    scripts = ` <script src="assets/bundle.js"> </script> `;
   }
+
   let page = `<!DOCTYPE html>
               <html lang="en">
               <head>
@@ -28,7 +31,7 @@ function template(title, initialState = {}, content = ""){
               </body>
               `;
 
-  return page;
+  return (page);
 }
 
 module.exports = template;
