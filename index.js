@@ -86,19 +86,16 @@ app.post('/anima-zip', (req, res, next)=> {
     }
 
     res.status(200).json({ uploaded : true });
-
   });
 
 
-  form.on('fileBegin', (name, file)=> {
-    const [fileName, fileExt] = file.name.split('.');
-    file.path = path.join(uploadDir, `${fileName}_${new Date().getTime()}.${fileExt}`)
-  })
+//   form.on('fileBegin', (name, file)=> {
+//     const [fileName, fileExt] = file.name.split('.');
+//     file.path = path.join(uploadDir, `${fileName}_${new Date().getTime()}.${fileExt}`)
+//   });
 
 
-
-
-
+/*
     var old_path = files.file.path,
       file_size = files.file.size,
       file_ext = files.file.name.split('.').pop(),
@@ -155,7 +152,7 @@ app.post('/anima-zip', (req, res, next)=> {
     else resolve();
   })
 
-
+*/
 });
 
 /*
