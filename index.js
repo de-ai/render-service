@@ -1,15 +1,24 @@
 
-
-
 const express = require('express');
 const app = express();
 const formidable = require('formidable');
 const fs = require('fs');
 // const nodemon = require('nodemon');
+const morgan = require('morgan');
 const template = require('./views/template');
 const zlib = require('zlib');
 const path = require('path');
 
+
+
+//var fsAccessLog = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' })
+var fsAccessLog = fs.createWriteStream(path.join('/var/log/node-express', 'access.log'), { flags : 'a' });
+
+// app config
+//app.use(morgan('combined'));
+app.use(morgan('combined',
+  { stream : fsAccessLog }
+));
 
 // Serving static files
 app.use('/assets', express.static(path.resolve(__dirname, 'assets')));
