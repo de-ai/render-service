@@ -44,12 +44,13 @@ app.get('/client', (req, res)=> {
 
 // contents of file
 app.get('/googlefdcf5eff7ee69de9.html', (req, res) => {
-  res.send('google-site-verification: googlefdcf5eff7ee69de9.html');
+  console.log('||', 'api.get()', __dirname, req.url);
+  fs.createReadStream(__dirname+'/media/googlefdcf5eff7ee69de9.html');
 });
 
-app.get('/googlefdcf5eff7ee69de9.html', (req, res) => {
-  fs.createReadStream("my-self-esteem.txt");
-});
+//app.get('/googlefdcf5eff7ee69de9.html', (req, res) => {
+//  fs.createReadStream("my-self-esteem.txt");
+//});
 
 // tiny trick to stop server during local development
 app.get('/exit', (req, res)=> {
@@ -62,6 +63,11 @@ app.get('/exit', (req, res)=> {
   }
 });
 
+
+app.post('/input', (req, res, next)=> {
+  req.pipe(fs.createWriteStream('./whatever.txt'));
+  req.on('end', next);
+});
 
 /*
 // restart if change --#
@@ -84,5 +90,3 @@ nodemon.on('start', ()=> {
 */
 
 //-- new Promise((_)=> null);
-
-

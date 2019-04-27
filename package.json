@@ -8,14 +8,14 @@
     "npm": "5.7.1"
   },
   "scripts": {
-    "clean": "rm -rf views/ 2> /dev/null ; rm -rf v8-compile-cache-0/ 2> /dev/null ; rm assets/bundle.js 2> /dev/null ; rm assets/client.js 2> /dev/null",
+    "clean": "rm -rf views/ 2> /dev/null",
     "compile": "npm run pack && npm run babel",
     "pack": "webpack --mode development --config webpack.config.js --progress",
     "babel": "babel src -d views",
 
     "build": "npm run clean && npm run compile",
     "start": "npm run build && node index.js",
-    "watch": "npm run build && nodemon --delay 0.33 --watch src --exec npm run start"
+    "watch": "npm run build && nodemon --delay 0.33 --watch index.js --watch src --exec npm run start"
   },
   "author": "Rohit kumar",
   "license": "CC BY 4.0",
