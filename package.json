@@ -8,15 +8,20 @@
     "npm": "5.7.1"
   },
   "scripts": {
-    "start": "node index.js",
-    "pack": "webpack --config webpack.config.js",
+    "clean": "rm -rf views/ 2> /dev/null ; rm -rf v8-compile-cache-0/ 2> /dev/null ; rm assets/bundle.js 2> /dev/null ; rm assets/client.js 2> /dev/null",
+    "compile": "npm run pack && npm run babel",
+    "pack": "webpack --mode development --config webpack.config.js --progress",
     "babel": "babel src -d views",
-    "build": "npm run pack && npm run babel"
+
+    "build": "npm run clean && npm run compile",
+    "start": "npm run build && node index.js",
+    "watch": "npm run build && nodemon --delay 0.33 --watch src --exec npm run start"
   },
   "author": "Rohit kumar",
   "license": "CC BY 4.0",
   "dependencies": {
     "express": "^4.16.4",
+    "nodemon": "^1.18.11",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-redux": "^5.1.1",

@@ -1,6 +1,8 @@
 const express = require('express'),
           app = express(),
-     template = require('./views/template')
+           fs = require('fs'),
+//      nodemon = require('nodemon'),
+     template = require('./views/template'),
          path = require('path');
 
 
@@ -45,6 +47,10 @@ app.get('/googlefdcf5eff7ee69de9.html', (req, res) => {
   res.send('google-site-verification: googlefdcf5eff7ee69de9.html');
 });
 
+app.get('/googlefdcf5eff7ee69de9.html', (req, res) => {
+  fs.createReadStream("my-self-esteem.txt");
+});
+
 // tiny trick to stop server during local development
 app.get('/exit', (req, res)=> {
   if (process.env.PORT) {
@@ -57,4 +63,26 @@ app.get('/exit', (req, res)=> {
 });
 
 
+/*
+// restart if change --#
+nodemon({
+  script : 'index.js',
+  ext    : 'js json'
+});
+
+nodemon.on('start', ()=> {
+  console.log('It has started!');
+
+}).on('quit', ()=> {
+  console.log('App has quit :(');
+  process.exit();
+
+}).on('restart', (files)=> {
+  console.log('App restarted due to: ', files);
+});
+
+*/
+
 //-- new Promise((_)=> null);
+
+
