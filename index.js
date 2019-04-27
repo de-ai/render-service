@@ -1,9 +1,14 @@
-const express = require('express'),
-          app = express(),
-           fs = require('fs'),
-//      nodemon = require('nodemon'),
-     template = require('./views/template'),
-         path = require('path');
+
+
+
+const express = require('express');
+const app = express();
+const formidable = require('formidable');
+const fs = require('fs');
+// const nodemon = require('nodemon');
+const template = require('./views/template');
+const zlib = require('zlib');
+const path = require('path');
 
 
 // Serving static files
@@ -64,9 +69,84 @@ app.get('/exit', (req, res)=> {
 });
 
 
-app.post('/input', (req, res, next)=> {
-  req.pipe(fs.createWriteStream('./whatever.txt'));
-  req.on('end', next);
+app.post('/anima-zip', (req, res, next)=> {
+  const form = new formidable.IncomingForm();
+  form.parse(req, (err, fields, files)=> {
+    if (err) {
+      return (res.status(500).json({ error : err }));
+    }
+
+    res.status(200).json({ uploaded : true });
+
+  });
+
+
+  form.on('fileBegin', (name, file)=> {
+    const [fileName, fileExt] = file.name.split('.');
+    file.path = path.join(uploadDir, `${fileName}_${new Date().getTime()}.${fileExt}`)
+  })
+
+
+
+
+
+    var old_path = files.file.path,
+      file_size = files.file.size,
+      file_ext = files.file.name.split('.').pop(),
+      index = old_path.lastIndexOf('/') + 1,
+      file_name = old_path.substr(index),
+      new_path = path.join(process.env.PWD, '/uploads/', file_name + '.' + file_ext);
+
+    fs.readFile(old_path, function(err, data) {
+      fs.writeFile(new_path, data, function(err) {
+        fs.unlink(old_path, function(err) {
+          if (err) {
+            res.status(500);
+            res.json({'success': false});
+
+          } else {
+            res.status(200);
+            res.json({'success': true});
+          }
+        });
+      });
+    });
+  });
+
+
+  let body = '';
+  const zipPath = `${__dirname}/public/src_zip/${req.body.filename}`;
+  req.on('data', (data)=> {
+    body += data;
+  });
+
+  req.on('end', ()=> {
+    fs.appendFile(zipPath, body, ()=> {
+
+      const rs = fs.createReadStream(zipPath);
+      const unzip = zlib.createGunzip();
+
+
+
+      res.end();
+
+    });
+
+    next();
+  });
+
+
+  //req.on('end', next);
+
+  const fileContents = fs.createReadStream(`./data/${filename}`);
+  const writeStream = fs.createWriteStream(`./data/${filename.slice(0, -3)}`);
+  const unzip = zlib.createGunzip();
+  fileContents.pipe(unzip).pipe(writeStream).on('finish', (err) => {
+    if (err) return reject(err);
+    else resolve();
+  })
+
+
 });
 
 /*

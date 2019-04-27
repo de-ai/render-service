@@ -12,7 +12,6 @@
     "compile": "npm run pack && npm run babel",
     "pack": "webpack --mode development --config webpack.config.js --progress",
     "babel": "babel src -d views",
-
     "build": "npm run clean && npm run compile",
     "start": "npm run build && node index.js",
     "watch": "npm run build && nodemon --delay 0.33 --watch index.js --watch src --exec npm run start"
@@ -21,6 +20,7 @@
   "license": "CC BY 4.0",
   "dependencies": {
     "express": "^4.16.4",
+    "formidable": "^1.2.1",
     "nodemon": "^1.18.11",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
