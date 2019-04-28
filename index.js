@@ -7,11 +7,9 @@ const app = express();
 
 const formidable = require('formidable');
 const fs = require('fs');
-const JSZip = require('jszip');
 const path = require('path');
 const winston = require('winston');
 const unzip = require('unzip');
-//const zlib = require('zlib');
 
 // local incl's
 const data = require('./assets/data.json');
@@ -105,7 +103,7 @@ app.post('/anima-src', (req, res, next)=> {
   const srcDir = `/var/opt/designengine/anima/src`;
   const extDir = `/var/opt/designengine/anima/ext`;
 
-  const form = new formidable.IncomingForm().parse(req, (err, fields, files)=> {
+  new formidable.IncomingForm().parse(req, (err, fields, files)=> {
     logger.info('form.parse()', { err, fields, files });
 
     if (err) {
@@ -117,34 +115,47 @@ app.post('/anima-src', (req, res, next)=> {
     const filepath = `${srcDir}/${file.name}`;
 
     fs.readFile(file.path, (err, data)=> {
-      logger.info('fs.readFile()', { filepath:file.path, err, data:data.length });
+      logger.info('fs.readFile()', { filepath : file.path, err, data : data.length });
       if (err) {
         return (res.status(500).json({ error : err }));
       }
 
       fs.writeFile(filepath, data, (err)=> {
-        logger.info('fs.writeFile()', { filepath, data:data.length, err });
+        logger.info('fs.writeFile()', { filepath, data : data.length, err });
 
         if (err) {
           return (res.status(500).json({ error : err }));
         }
 
-        fs.createReadStream(filepath).pipe(unzip.Extract({ path : extDir }));
-        fs.unlink(file.path, (err)=> {
+        fs.createReadStream(filepath).pipe(unzip.Extract({ path : extDir })).unlink(file.path, (err)=> {
           if (err) {
             throw (err);
           }
+
+        }).on('end', ()=> {
+          logger.info('fs.on(end)');
+
+          const srcPaths = {
+            html : `${extDir}/${title}.html`,
+            css  : `${extDir}/${title}.css`
+          };
+
+          fs.readFile(srcPaths.html, (err, data)=> {
+            logger.info('htmlStream.readFile(HTML)', { srcPaths, err, data });
+
+
+
+          });
         });
-
-        const rsHTML = fs.createReadStream(`${extDir}/${title}.html`);
-
       });
     });
 
-    res.status(200).json({ uploaded : true });
+  }).on('field', (name, field)=> {
+    logger.info('form.on(field)', { name, field });
 
   }).on('fileBegin', (name, file)=> {
     logger.info('form.on(fileBegin)', { name, file });
+//     file.path = `${srcDir}/${file.name}`;
 
 /*
     const rStream = fs.readFile(`${srcDir}/${file.name}`, (err, data)=> {
@@ -170,9 +181,26 @@ app.post('/anima-src', (req, res, next)=> {
       });
     });
 */
-//    req.on('end', next);
+  }).on('file', (name, file)=> {
+    logger.info('form.on(file)', { name, file });
+//     res.status(200).json({ uploaded : true });
+
   }).on('end', ()=> {
+    logger.info('form.on(end)');
+
+//    req.on('end', next);
     res.end();
   });
 });
 
+
+/*
+
+// add header
+res.writeHead(200, {'Content-Type': 'text/html'});
+
+
+// response content
+res.write('YEEEEEE');
+
+ */

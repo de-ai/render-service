@@ -1,9 +1,30 @@
 
-.idea
+#-- os
+**/.DS_Store
+**/._DS_Store
 
 
-node_modules
-.DS_Store
-assets
-views
-v8-compile-cache*
+#-- ide
+/.idea
+
+
+#-- node / npm
+/node_modules
+npm-debug.log*
+
+
+#-- build
+/assets/**/*
+/build
+/views/**/*
+/v8-compile-cache*
+
+
+
+#--#--#--#--#--#--#--#--#--#--#--#--#--#--#
+
+#-- all under /vendor
+#// /vendor/**/*.*
+
+#-- all .* files under nested vendor
+#// **/vendor/**/.*
