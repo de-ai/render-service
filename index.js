@@ -23,7 +23,7 @@ const template = require('./views/template');
 const logger = winston.createLogger({
   level      : 'info',
   transports : [
-    new winston.transports.Console(),
+//     new winston.transports.Console(),
     new winston.transports.File({ filename : '/var/log/render-service/info.log' })
   ]
 });
@@ -112,7 +112,6 @@ app.post('/anima-src', (req, res, next)=> {
 
     const { title } = fields;
     const { file } = files;
-    const filepath = `${srcDir}/${file.name}`;
 
     fs.readFile(file.path, (err, data)=> {
       logger.info(`fs.readFile(${file.path})`, { err, data : data.length });
@@ -120,35 +119,27 @@ app.post('/anima-src', (req, res, next)=> {
         return (res.status(500).json({ error : err }));
       }
 
-      fs.writeFile(filepath, data, (err)=> {
-        logger.info(`fs.writeFile(${filepath})`, { data : data.length, err });
+      fs.createReadStream(file.path).pipe(unzip.Extract({ path : extDir })).on('end', ()=> {
+        logger.info(`fs.on('end') unzip "${filepath}" ->> "${extDir}"`);
+//           this.unlink(file.path, (err)=> {});
 
-        if (err) {
-          return (res.status(500).json({ error : err }));
-        }
+        const srcPaths = {
+          html : `${extDir}/${title}.html`,
+          css  : `${extDir}/${title}.css`
+        };
 
-        fs.createReadStream(filepath).pipe(unzip.Extract({ path : extDir })).on('end', ()=> {
-          logger.info(`fs.on('end') unzip "${filepath}" ->> "${extDir}"`);
-          this.unlink(file.path, (err)=> {});
-
-          const srcPaths = {
-            html : `${extDir}/${title}.html`,
-            css  : `${extDir}/${title}.css`
-          };
-
-          fs.readFile(srcPaths.html, (err, data)=> {
-            logger.info(`htmlStream.readFile(${srcPaths.html})`, { srcPaths, err, data });
-          });
+        fs.readFile(srcPaths.html, (err, data)=> {
+          logger.info(`htmlStream.readFile(${srcPaths.html})`, { srcPaths, err, data });
         });
       });
     });
 
   }).on('field', (name, field)=> {
-    logger.info('form.on(field)', { name, field });
+//     logger.info('form.on(field)', { name, field });
 
   }).on('fileBegin', (name, file)=> {
     logger.info('form.on(fileBegin)', { name, file });
-//     file.path = `${srcDir}/${file.name}`;
+    file.path = `${srcDir}/${file.name}`;
 
 /*
     const rStream = fs.readFile(`${srcDir}/${file.name}`, (err, data)=> {
