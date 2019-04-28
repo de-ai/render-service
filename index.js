@@ -100,9 +100,6 @@ app.post('/anima-src', (req, res, next)=> {
   const { url, body, query, files } = req;
   logger.info('app.post(/anima-src)', { req :{ url, body, query, form:req.form, files }, res:res.url, next });
 
-  const srcDir = `/var/opt/designengine/anima/src`;
-  const extDir = `/var/opt/designengine/anima/ext`;
-
   new formidable.IncomingForm().parse(req, (err, fields, files)=> {
     logger.info('form.parse()', { err, fields, files });
 
@@ -119,8 +116,12 @@ app.post('/anima-src', (req, res, next)=> {
         return (res.status(500).json({ error : err }));
       }
 
+      const extDir = `/var/opt/designengine/anima/ext`;
+
+
+
       fs.createReadStream(file.path).pipe(unzip.Extract({ path : extDir })).on('end', ()=> {
-        logger.info(`fs.on('end') unzip "${filepath}" ->> "${extDir}"`);
+        logger.info(`fs.on('end') unzip "${file.path}" ->> "${extDir}"`);
 //           this.unlink(file.path, (err)=> {});
 
         const srcPaths = {
@@ -139,7 +140,7 @@ app.post('/anima-src', (req, res, next)=> {
 
   }).on('fileBegin', (name, file)=> {
     logger.info('form.on(fileBegin)', { name, file });
-    file.path = `${srcDir}/${file.name}`;
+    file.path = `/var/opt/designengine/anima/src/${file.name}`;
 
 /*
     const rStream = fs.readFile(`${srcDir}/${file.name}`, (err, data)=> {
