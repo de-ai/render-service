@@ -115,25 +115,21 @@ app.post('/anima-src', (req, res, next)=> {
     const filepath = `${srcDir}/${file.name}`;
 
     fs.readFile(file.path, (err, data)=> {
-      logger.info('fs.readFile()', { filepath : file.path, err, data : data.length });
+      logger.info(`fs.readFile(${file.path})`, { err, data : data.length });
       if (err) {
         return (res.status(500).json({ error : err }));
       }
 
       fs.writeFile(filepath, data, (err)=> {
-        logger.info('fs.writeFile()', { filepath, data : data.length, err });
+        logger.info(`fs.writeFile(${filepath})`, { data : data.length, err });
 
         if (err) {
           return (res.status(500).json({ error : err }));
         }
 
-        fs.createReadStream(filepath).pipe(unzip.Extract({ path : extDir })).unlink(file.path, (err)=> {
-          if (err) {
-            throw (err);
-          }
-
-        }).on('end', ()=> {
-          logger.info('fs.on(end)');
+        fs.createReadStream(filepath).pipe(unzip.Extract({ path : extDir })).on('end', ()=> {
+          logger.info(`fs.on('end') unzip "${filepath}" ->> "${extDir}"`);
+          this.unlink(file.path, (err)=> {});
 
           const srcPaths = {
             html : `${extDir}/${title}.html`,
@@ -141,10 +137,7 @@ app.post('/anima-src', (req, res, next)=> {
           };
 
           fs.readFile(srcPaths.html, (err, data)=> {
-            logger.info('htmlStream.readFile(HTML)', { srcPaths, err, data });
-
-
-
+            logger.info(`htmlStream.readFile(${srcPaths.html})`, { srcPaths, err, data });
           });
         });
       });
