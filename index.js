@@ -1,74 +1,92 @@
+'use strict';
 
+
+// npm incl's
 const express = require('express');
 const app = express();
+
 const formidable = require('formidable');
 const fs = require('fs');
-// const nodemon = require('nodemon');
-const morgan = require('morgan');
-const template = require('./views/template');
-const zlib = require('zlib');
+const JSZip = require('jszip');
 const path = require('path');
+const winston = require('winston');
+const unzip = require('unzip');
+//const zlib = require('zlib');
 
-
-
-//var fsAccessLog = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' })
-var fsAccessLog = fs.createWriteStream(path.join('/var/log/node-express', 'access.log'), { flags : 'a' });
-
-// app config
-//app.use(morgan('combined'));
-app.use(morgan('combined',
-  { stream : fsAccessLog }
-));
-
-// Serving static files
-app.use('/assets', express.static(path.resolve(__dirname, 'assets')));
-app.use('/media', express.static(path.resolve(__dirname, 'media')));
-
-// hide powered by express
-app.disable('x-powered-by');
-
-// start the server
-app.listen(process.env.PORT || 1066);
-
-// our apps data model
+// local incl's
 const data = require('./assets/data.json');
+const ssr = require('./views/server');
+const template = require('./views/template');
 
-let initialState = {
+
+// -=- CONFIG -=- //
+
+// logger setup
+const logger = winston.createLogger({
+  level      : 'info',
+  transports : [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename : '/var/log/render-service/info.log' })
+  ]
+});
+
+
+// starting state of store
+const initialState = {
   isFetching : false,
   apps       : data
 };
 
-//SSR function import
-const ssr = require('./views/server');
 
-// server rendered home page
+// remove header
+app.disable('x-powered-by');
+
+// static paths
+app.use('/assets', express.static(path.resolve(__dirname, 'assets')));
+app.use('/media', express.static(path.resolve(__dirname, 'media')));
+
+
+
+
+// -=#-#-- start the server --#-#=- //
+app.listen(process.env.NODE_PORT || 1066);
+
+
+
+
+// --=/#/=-- GET handlers --=/#/=-- //
+// -------------------------------- //
+
+//-- root -/> /
 app.get('/', (req, res)=> {
+  logger.info('app.get(/)', { req:req.url, res:res.url });
+
   const { preloadedState, content } = ssr(initialState);
   const response = template('Server Rendered Page', preloadedState, content);
   res.setHeader('Cache-Control', 'assets, max-age=604800');
   res.send(response);
 });
 
-// Pure client side rendered page
+//-- client rendered -/> /client
 app.get('/client', (req, res)=> {
+  logger.info('app.get(/client)', { req:req.url, res:res.url });
+
   let response = template('Client Side Rendered page');
   res.setHeader('Cache-Control', 'assets, max-age=604800');
   res.send(response);
 });
 
-// contents of file
-app.get('/googlefdcf5eff7ee69de9.html', (req, res) => {
-  console.log('||', 'api.get()', __dirname, req.url);
-  fs.createReadStream(__dirname+'/media/googlefdcf5eff7ee69de9.html');
+//-- file contents -/> /googlefdcf5eff7ee69de9,html
+app.get('/googlefdcf5eff7ee69de9.html', (req, res)=> {
+  logger.info('api.get(/googlefdcf5eff7ee69de9.html)', { req:req.url, res:res.url, dirname:__dirname });
+  fs.createReadStream(`${__dirname}/media/googlefdcf5eff7ee69de9.html`);
 });
 
-//app.get('/googlefdcf5eff7ee69de9.html', (req, res) => {
-//  fs.createReadStream("my-self-esteem.txt");
-//});
+//-- attempt to exit -/> /raze
+app.get('/raze', (req, res)=> {
+  logger.info('app.get(/raze)', { req:req.url, res:res.url, next });
 
-// tiny trick to stop server during local development
-app.get('/exit', (req, res)=> {
-  if (process.env.PORT) {
+  if (process.env.NODE_PORT) {
     res.send('Sorry, the server denies your request');
 
   } else {
@@ -78,101 +96,82 @@ app.get('/exit', (req, res)=> {
 });
 
 
-app.post('/anima-zip', (req, res, next)=> {
-  const form = new formidable.IncomingForm();
-  form.parse(req, (err, fields, files)=> {
+// --=/#/=-- POST handlers --=/#/=-- //
+// --------------------------------- //
+app.post('/anima-src', (req, res, next)=> {
+  const { url, body, query, files } = req;
+  logger.info('app.post(/anima-src)', { req :{ url, body, query, form:req.form, files }, res:res.url, next });
+
+  const srcDir = `/var/opt/designengine/anima/src`;
+  const extDir = `/var/opt/designengine/anima/ext`;
+
+  const form = new formidable.IncomingForm().parse(req, (err, fields, files)=> {
+    logger.info('form.parse()', { err, fields, files });
+
     if (err) {
       return (res.status(500).json({ error : err }));
     }
 
+    const { title } = fields;
+    const { file } = files;
+    const filepath = `${srcDir}/${file.name}`;
+
+    fs.readFile(file.path, (err, data)=> {
+      logger.info('fs.readFile()', { filepath:file.path, err, data:data.length });
+      if (err) {
+        return (res.status(500).json({ error : err }));
+      }
+
+      fs.writeFile(filepath, data, (err)=> {
+        logger.info('fs.writeFile()', { filepath, data:data.length, err });
+
+        if (err) {
+          return (res.status(500).json({ error : err }));
+        }
+
+        fs.createReadStream(filepath).pipe(unzip.Extract({ path : extDir }));
+        fs.unlink(file.path, (err)=> {
+          if (err) {
+            throw (err);
+          }
+        });
+
+        const rsHTML = fs.createReadStream(`${extDir}/${title}.html`);
+
+      });
+    });
+
     res.status(200).json({ uploaded : true });
-  });
 
-
-//   form.on('fileBegin', (name, file)=> {
-//     const [fileName, fileExt] = file.name.split('.');
-//     file.path = path.join(uploadDir, `${fileName}_${new Date().getTime()}.${fileExt}`)
-//   });
-
+  }).on('fileBegin', (name, file)=> {
+    logger.info('form.on(fileBegin)', { name, file });
 
 /*
-    var old_path = files.file.path,
-      file_size = files.file.size,
-      file_ext = files.file.name.split('.').pop(),
-      index = old_path.lastIndexOf('/') + 1,
-      file_name = old_path.substr(index),
-      new_path = path.join(process.env.PWD, '/uploads/', file_name + '.' + file_ext);
+    const rStream = fs.readFile(`${srcDir}/${file.name}`, (err, data)=> {
+      logger.info('fs.readFile()', { err, data });
 
-    fs.readFile(old_path, function(err, data) {
-      fs.writeFile(new_path, data, function(err) {
-        fs.unlink(old_path, function(err) {
-          if (err) {
-            res.status(500);
-            res.json({'success': false});
+      if (err) {
+        return (res.status(500).json({ error : err }));
+      }
 
-          } else {
-            res.status(200);
-            res.json({'success': true});
-          }
+      const jszip = new JSZip();
+      JSZip.loadAsync(data).then((contents)=> {
+        const files = Object.keys(contents.files);
+        logger.info('jszip.loadAsync()', { files });
+
+        files.forEach((filename)=> {
+          jszip.file(filename).async('nodebuffer').then((content)=> {
+            logger.info('jszip.file(nodebuffer)', { filename, content });
+
+            const filepath = `${extDir}/${filename}`;
+            fs.writeFileSync(filepath, content);
+          });
         });
       });
     });
-  });
-
-
-  let body = '';
-  const zipPath = `${__dirname}/public/src_zip/${req.body.filename}`;
-  req.on('data', (data)=> {
-    body += data;
-  });
-
-  req.on('end', ()=> {
-    fs.appendFile(zipPath, body, ()=> {
-
-      const rs = fs.createReadStream(zipPath);
-      const unzip = zlib.createGunzip();
-
-
-
-      res.end();
-
-    });
-
-    next();
-  });
-
-
-  //req.on('end', next);
-
-  const fileContents = fs.createReadStream(`./data/${filename}`);
-  const writeStream = fs.createWriteStream(`./data/${filename.slice(0, -3)}`);
-  const unzip = zlib.createGunzip();
-  fileContents.pipe(unzip).pipe(writeStream).on('finish', (err) => {
-    if (err) return reject(err);
-    else resolve();
-  })
-
 */
+//    req.on('end', next);
+  }).on('end', ()=> {
+    res.end();
+  });
 });
-
-/*
-// restart if change --#
-nodemon({
-  script : 'index.js',
-  ext    : 'js json'
-});
-
-nodemon.on('start', ()=> {
-  console.log('It has started!');
-
-}).on('quit', ()=> {
-  console.log('App has quit :(');
-  process.exit();
-
-}).on('restart', (files)=> {
-  console.log('App restarted due to: ', files);
-});
-
-*/
-
-//-- new Promise((_)=> null);
