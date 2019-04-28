@@ -117,10 +117,18 @@ app.post('/anima-src', (req, res, next)=> {
         return (res.status(500).json({ error : err }));
       }
 
-      const extDir = `/var/opt/designengine/anima/ext`;
+      const dir = `/var/opt/designengine/anima/ext/`;
+      logger.info(`:::::::::::::::::: EXTRACTING : ${file.path} --//> ${dir}`);
 
+      extract(file.path, { dir,
+        onEntry : (entry)=> {
+          logger.info(`extract(${file.path}).onEntry(${entry})`, { entry });
+        }
+      }, (err)=> {
+        logger.info(`extract(${file.path})`, { dir, err });
+      });
 
-
+/*
       fs.createReadStream(file.path).pipe(unzip.Extract({ path : extDir })).on('end', ()=> {
         logger.info(`fs.on('end') unzip "${file.path}" ->> "${extDir}"`);
 //           this.unlink(file.path, (err)=> {});
@@ -134,6 +142,7 @@ app.post('/anima-src', (req, res, next)=> {
           logger.info(`htmlStream.readFile(${srcPaths.html})`, { srcPaths, err, data });
         });
       });
+*/
     });
 
   }).on('field', (name, field)=> {
