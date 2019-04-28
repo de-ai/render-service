@@ -9,7 +9,8 @@ const formidable = require('formidable');
 const fs = require('fs');
 const path = require('path');
 const winston = require('winston');
-const unzip = require('unzip');
+//const unzip = require('unzip');
+const extract = require('extract-zip');
 
 // local incl's
 const data = require('./assets/data.json');
